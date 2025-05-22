@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= renderData.source.title %></title>
+    <title>title</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script src="/public/ovenplayer/ovenplayer.js"></script>
     <script src="/public/hls.js/hls.min.js"></script>
@@ -18,12 +18,45 @@
   <body>
 
     <%- include('navbar', renderData); %>
-    <h1><center><%= renderData.source.title %></center></h1>
+    <h1 id="streamtitle" style="text-align: center"></h1>
 
     <div class="wrapper">
       <div id="player"></div>
     </div>
     <script>
+      var streamData = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(renderData.viewStreams.entries())) %>));
+      var player = null;
+
+      function updatePlayer(player, url) {
+        const anchorIndex = url.lastIndexOf("#");
+        var anchor = null;
+        if (anchorIndex !== -1) {
+          anchor = url.substring(anchorIndex + 1);
+        }
+
+        var currentStream;
+        if (anchor) {
+          currentStream = anchor;
+        } else {
+          //There was no anchor tag in the url, so we want to render the first stream
+          //console.log(streamData.values().next().value.key);
+          currentStream = streamData.values().next().value.key;
+        }
+
+        //console.log("updatePlayer: " + currentStream);
+        
+        //set the title.  Try to do this first to prevent flicker
+        const h1Element = document.getElementById("streamtitle");
+        const title = streamData.get(currentStream).title;
+        h1Element.textContent = title;
+        document.title = title;
+  
+        //load the current stream details into the player
+        var sources = streamData.get(currentStream).sources;
+        //console.log("sources: " + JSON.stringify(sources));
+        player.load(sources);
+      }
+
       function component() {
         var player = OvenPlayer.create("player", {
           "autoStart": false,
@@ -33,11 +66,28 @@
             "liveSyncDuration": 0.5,
             "liveMaxLatencyDuration": 2,
             "maxLiveSyncPlaybackRate": 1.5
-          },
-          "sources": <%- JSON.stringify(renderData.source.sources) %>
+          }
         });
+        return player;
       }
-      component();
+
+      window.onload = function() {
+        //console.log("window.onload");
+        //console.log(document.getElementById("player"));
+        //console.log(document.readyState);
+        player = component();
+        //console.log("created player");
+        //load the current stream details into the player
+        updatePlayer(player, window.location.href);
+      }
+
+      window.navigation.addEventListener('navigate', function(event) {
+        //console.log('current location ' + window.location.href);
+        //console.log('destination ' + event.destination.url);
+        updatePlayer(player, event.destination.url);
+      })
+
+
     </script>
     <script src="/public/bootstrap/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   </body>

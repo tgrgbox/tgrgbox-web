@@ -5,18 +5,18 @@
 
 
 
-      <!--Channel dropdown -->
+      <!--Stream dropdown -->
       <div class="btn-group">
         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          Channels
+          Streams
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-          <% channels.forEach( (channel) => { %>
-          <li><a class="dropdown-item" href="/player/<%= channel.name %>"><%= channel.title %></a></li>
+          <% viewStreams.forEach( (stream) => { %>
+          <li><a class="dropdown-item" href="/player#<%= stream.name %>"><%= stream.title %></a></li>
           <% }) %>
         </ul>
       </div>
-      <!-- End channel dropdown -->
+      <!-- End stream dropdown -->
 
       <!--User dropdown -->
       <div class="btn-group">
@@ -29,7 +29,7 @@
           <%= username %>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-          <% if (renderData.streamers.has(userid)) { %>
+          <% if (renderData.admins.has(userid)) { %>
             <li><a class="dropdown-item" href="/streamkeys">Your stream keys</a></li>
             <li><hr class="dropdown-divider"></li>
           <%}%>

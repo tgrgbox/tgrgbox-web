@@ -31,16 +31,17 @@ module.exports = function(config) {
                 var url = new URL(apireq.request.url);
                 var streamKey = nodePath.basename(url.pathname);
                 var streamName = nodePath.dirname(url.pathname);
-                var channel = config.channels.find((channel) => channel.streamKey === streamKey);
-                if (channel) {
+                console.log('streams is %O', config.streams);
+                var stream = config.streams.find((stream) => stream.streamKey === streamKey);
+                if (stream) {
                     response.allowed = true;
                     response.lifetime = defaultStreamTime;
 
-                    url.pathname = nodePath.join(streamName, channel.stream);
+                    url.pathname = nodePath.join(streamName, stream.stream);
                     response.new_url = url.href;
                 } else {
                     response.allowed = false;
-                    response.reason = 'Stream key ' + streamKey + 'was not found in config';
+                    response.reason = 'Stream key ' + streamKey + ' was not found in config';
                     console.log('incoming stream rejected: ' + response.reason);
                 }
 

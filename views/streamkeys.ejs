@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= renderData.source.title %></title>
+    <title><%= renderData.siteName %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   </head>
@@ -13,38 +13,38 @@
     <h1><center>Stream keys for <%= renderData.siteName %></center></h1>
     </div>
     <div>
-    <% var userChannels = renderData.streamers.get(renderData.userid);
-       if (userChannels) { 
-         var userChannelsSet = new Set(userChannels);%>
+    <% var userStreams = renderData.admins.get(renderData.userid).streams;
+       if (userStreams) { 
+         var userStreamsSet = new Set(userStreams);%>
          <table class="table table-hover table-bordered">
            <thead>
              <tr>
-               <th scope="col">Channel</th>
+               <th scope="col">Stream</th>
                <th scope="col">Streamer Info</th>
              </tr>
            </thead>
            <tbody>
-         <% renderData.channels.forEach(function(channel) {
-           if (userChannelsSet.has(channel.name)) { %>
+         <% renderData.sendStreams.forEach(function(stream) {
+           if (userStreamsSet.has(stream.name)) { %>
             <tr>
-              <td><%= channel.title %></td>
+              <td><%= stream.title %></td>
               <td style="padding: 0;">
                 <table class="table table-striped table-boardered" style="border: 1px solid black;">
                   <tr>
                     <td>RTMP Url</td>
-                    <td><%= channel.rtmp %></td>
+                    <td><%= stream.rtmp %></td>
                   </tr>
                   <tr>
                     <td>RTMP Stream Key</td>
-                    <td><%= channel.streamKey %></td>
+                    <td><%= stream.streamKey %></td>
                   </tr>
                   <tr>
                     <td>SRT Url</td>
-                    <td><%= channel.srt %></td>
+                    <td><%= stream.srt %></td>
                   </tr>
                   <tr>
                     <td>WHIP Url</td>
-                    <td><%= channel.whip %></td>
+                    <td><%= stream.whip %></td>
                   </tr>
                 </table>
               </td>
@@ -54,7 +54,9 @@
            </tbody>
         </table>
        <br>
-       <div>For RTMP use the Url in the Server field and the Stream Key in the Stream Key field.  For SRT use the SRT Url in the server field and leave the Stream Key field blank.</div>
+       <div>For RTMP use the Url in the Server field and the Stream Key in the Stream Key field.<br>
+        For SRT use the SRT Url in the server field and leave the Stream Key field blank.<br>
+        For WHIP use the Url in the server field and leave the Bearer token blank.</div>
        <%} else { %>
        <p>You have no stream keys</p>
        <% } %>
