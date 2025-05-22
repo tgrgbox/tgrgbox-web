@@ -16,24 +16,39 @@
     <% var userChannels = renderData.streamers.get(renderData.userid);
        if (userChannels) { 
          var userChannelsSet = new Set(userChannels);%>
-         <table class="table table-striped table-hover table-bordered">
+         <table class="table table-hover table-bordered">
            <thead>
              <tr>
                <th scope="col">Channel</th>
-               <th scope="col">RTMP Url</th>
-               <th scope="col">Stream Key</th>
-               <th scope="col">SRT Url</th>
+               <th scope="col">Streamer Info</th>
              </tr>
            </thead>
            <tbody>
          <% renderData.channels.forEach(function(channel) {
            if (userChannelsSet.has(channel.name)) { %>
-             <tr>
-               <td><%= channel.title %></td>
-               <td><%= channel.rtmp %></td>
-               <td><%= channel.streamKey %></td>
-               <td><%= channel.srt %></td>
-             </tr>
+            <tr>
+              <td><%= channel.title %></td>
+              <td style="padding: 0;">
+                <table class="table table-striped table-boardered" style="border: 1px solid black;">
+                  <tr>
+                    <td>RTMP Url</td>
+                    <td><%= channel.rtmp %></td>
+                  </tr>
+                  <tr>
+                    <td>RTMP Stream Key</td>
+                    <td><%= channel.streamKey %></td>
+                  </tr>
+                  <tr>
+                    <td>SRT Url</td>
+                    <td><%= channel.srt %></td>
+                  </tr>
+                  <tr>
+                    <td>WHIP Url</td>
+                    <td><%= channel.whip %></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
         <% }
         }); %>
            </tbody>
