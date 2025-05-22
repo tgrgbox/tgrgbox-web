@@ -27,6 +27,7 @@ urls:
 ingest:
   srt: "srt://tgrgbox.example.com:9999"
   rtmp: "rtmp://tgrgbox.example.com:1935"
+  whip: "https://tgrgbox.example.com:3333"
 #A list of Discord usernames (with discriminators) that are allowed access to the site.  All streamers (listed in channels) must be listed here to
 users:
   - "TinkyWinky#0001"
