@@ -15,6 +15,7 @@ module.exports = function(config) {
         debug('player.js data is %O', data);
         res.render('player', data);
     });
+    /*
     router.get('/:stream', function(req, res, next) {
         debug("Got stream name %O", req.params);
         var data = renderData(req.session, req.params.stream);
@@ -25,5 +26,6 @@ module.exports = function(config) {
         debug('player.js data is %O', data);
         res.render('player', data);
     });
+    */
     return router;
 }
