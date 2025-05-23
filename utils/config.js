@@ -68,17 +68,29 @@ module.exports = function(config, datapath) {
     //this remains an object
     module.ingest = config.get('ingest');
 
-    //Load the broadcasts
-    var broadcastsObject = config.get('broadcasts');
-    //Load the broadcasts into a list from broadcast name to its details.  Preserve the order so we know which is "primary".
-    var broadcastsList = Object.entries(broadcastsObject).map( ([key, value]) => ({ 'name': key, 'title': value.title, 'broadcast': key }));
-
-    module.broadcasts = broadcastsList;
-
     var streamsObject = config.get('streams');
     //Load the streams into a list from stream name to its details.  Preserve
     //the list order from the config so we know which one is "primary"
     var streamsList = Object.entries(streamsObject).map( ([key, value]) => ({ 'name': key, 'title': value.title, 'app': value.app, 'stream': key, 'streamKey': getOrCreateSecret(currentData, 'stream.' + key, LONG_SECRET_SIZE) }));
+    debug('streamList is %O', streamsList);
+
+    //Load the broadcasts
+    var broadcastsObject = config.get('broadcasts');
+    //Load the broadcasts into a list from broadcast name to its details.  Preserve the order so we know which is "primary".
+    var broadcastsList = Object.entries(broadcastsObject).map( ([key, value]) => ({ 'name': key, 'title': value.title, 'broadcast': key, 'streams': value.streams }));
+    //make sure every stream associated with a broadcast exists
+    broadcastsList.forEach((broadcast) => {
+        var streamNamesList = streamsList.map((entry) => entry.name)
+        broadcast.streams.forEach((stream) => {
+            debug('stream is %O', stream);
+            debug('streamNamesList is %O', streamNamesList);
+            if (!streamNamesList.includes(stream)) {
+                throw 'Stream ' + stream + ' for broadcast ' + broadcast.name + ' is not in the streams list';
+            }
+        });
+    });
+
+    module.broadcasts = broadcastsList;
 
     //make sure that the stream keys are unique
     var streamKeys = new Set();

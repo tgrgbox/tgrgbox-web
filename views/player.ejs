@@ -25,34 +25,74 @@
     </div>
     <script>
       var streamData = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(renderData.viewStreams.entries())) %>));
+      var broadcastData = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(renderData.broadcasts.entries())) %>));
+      var broadcastMap = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(broadcastMap.entries())) %>));
       var player = null;
 
-      function updatePlayer(player, url) {
+      var currentPlayerState = {};
+
+      /**
+       * This function is called when the url changes.  It creates a new player state based on the url and the
+       * supplied broadcast map.  Callers should compare the new state to the existing state and then update the page/player accordingly
+       */
+      function getNewPlayerState(url, newBroadcastMap) {
         const anchorIndex = url.lastIndexOf("#");
         var anchor = null;
         if (anchorIndex !== -1) {
           anchor = url.substring(anchorIndex + 1);
         }
 
-        var currentStream;
+        var newBroadcast = null;
+        var newStream = null;;
         if (anchor) {
-          currentStream = anchor;
+          console.log("Have anchor");
+          console.log(streamData);
+          if (broadcastData.has(anchor)) {
+            console.log("anchor matches broadcast");
+            newBroadcast = anchor;
+          }  else {
+            console.log("anchor matches stream");
+            newStream = anchor;
+          }
         } else {
-          //There was no anchor tag in the url, so we want to render the first stream
-          //console.log(streamData.values().next().value.key);
-          currentStream = streamData.values().next().value.key;
+          //There was no anchor tag in the url, so we want to render the default broadcast/stream
+          //first, check to see if there is a default broadcast.  If there is one, then use that
+          //otherwise use the first stream
+          if (streamData.broadcasts) {
+            newBroadcast = broadcastData.values().next().key;
+          } else {
+            //console.log(streamData.values().next().value.key);
+            newStream = streamData.values().next().value.key;
+          }
         }
 
-        //console.log("updatePlayer: " + currentStream);
+        if (newBroadcast) {
+          //if we have a broadcast then lookup the associated stream.  This callback may return a new map if the broadcast has changed
+          newStream = newBroadcastMap.get(newBroadcast);
+        }
+        console.log("newBroadcast: " + newBroadcast);
+        console.log("newStream: " + newStream);
+
+        return {
+          'currentBroadcast' : newBroadcast,
+          'currentStream' : newStream,
+          'broadcastMap': newBroadcastMap
+        };
+      }
+
+      function updatePlayer(player) {
+
+        console.log("updatePlayer: " + currentPlayerState.currentStream);
+        console.log(currentPlayerState);
         
         //set the title.  Try to do this first to prevent flicker
         const h1Element = document.getElementById("streamtitle");
-        const title = streamData.get(currentStream).title;
+        const title = streamData.get(currentPlayerState.currentStream).title;
         h1Element.textContent = title;
         document.title = title;
   
         //load the current stream details into the player
-        var sources = streamData.get(currentStream).sources;
+        var sources = streamData.get(currentPlayerState.currentStream).sources;
         //console.log("sources: " + JSON.stringify(sources));
         player.load(sources);
       }
@@ -71,21 +111,74 @@
         return player;
       }
 
+      async function getUpdatedBroadcastMap() {
+        console.log("in getUpdatedBroadcastMap");
+        return fetch('/api/broadcast')
+          .then(response => response.json())
+          /*.then(data => {
+            console.log("in getUpdatedBroadcastMap callback");
+            console.log(data);
+            newBroadcastMap = new Map(Object.entries(data));
+          })*/
+          .catch(error => {
+            console.error('Error fetching broadcast map:', error);
+          });
+      }
+
+      function pollBroadcastMap() {
+        console.log("in pollBroadcastMap");
+        getUpdatedBroadcastMap().then((newBroadcastMapObject) => {
+          console.log("in pollBroadcastMap callback");
+          console.log(newBroadcastMapObject);
+          newBroadcastMap = new Map(Object.entries(newBroadcastMapObject));
+
+          doConditionalUpdatePlayer(window.location.href, newBroadcastMap);
+        });
+      }
+
+      setInterval(pollBroadcastMap, 5000);
+
       window.onload = function() {
-        //console.log("window.onload");
+        console.log("window.onload");
         //console.log(document.getElementById("player"));
         //console.log(document.readyState);
         player = component();
         //console.log("created player");
         //load the current stream details into the player
-        updatePlayer(player, window.location.href);
+        currentPlayerState = getNewPlayerState(window.location.href, broadcastMap);
+        updatePlayer(player);
+        console.log("loaded player");
+        console.log(currentPlayerState)
+      }
+
+      function doConditionalUpdatePlayer(url, newBroadcastMap) {
+          console.log("in doConditionalUpdatePlayer");
+          var newPlayerState = getNewPlayerState(url, newBroadcastMap);
+          console.log("checking state");
+          console.log(newPlayerState)
+          console.log(currentPlayerState);
+          if (currentPlayerState.currentBroadcast !== newPlayerState.currentBroadcast ||
+              currentPlayerState.currentStream !== newPlayerState.currentStream) {
+                console.log("updating player");
+              currentPlayerState = newPlayerState;
+              updatePlayer(player);
+          }
+
       }
 
       window.navigation.addEventListener('navigate', function(event) {
-        //console.log('current location ' + window.location.href);
-        //console.log('destination ' + event.destination.url);
-        updatePlayer(player, event.destination.url);
-      })
+        console.log("in addEventListener");
+        console.log(currentPlayerState);
+        //it might be nice to do this only if the broadcast has changed but it's not a big deal in this case.
+        getUpdatedBroadcastMap().then((newBroadcastMapObject) => {
+            newBroadcastMap = new Map(Object.entries(newBroadcastMapObject));
+            doConditionalUpdatePlayer(event.destination.url, newBroadcastMap);
+
+          }
+        );
+      });
+
+      
 
 
     </script>

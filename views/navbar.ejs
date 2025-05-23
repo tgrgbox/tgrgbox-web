@@ -5,6 +5,18 @@
 
 
 
+      <!--Broadcast dropdown -->
+      <div class="btn-group">
+        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          Broadcasts
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <% broadcasts.forEach( (broadcast) => { %>
+          <li><a class="dropdown-item" href="/player#<%= broadcast.name %>"><%= broadcast.title %></a></li>
+          <% }) %>
+        </ul>
+      </div>
+      <!-- End broadcast dropdown -->
       <!--Stream dropdown -->
       <div class="btn-group">
         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">

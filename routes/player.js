@@ -3,8 +3,8 @@ var express = require('express');
 var router = express.Router();
 
 
-module.exports = function(config) {
-    var renderData = require('../utils/renderdata')(config);
+module.exports = function(config, broadcastMap) {
+    var renderData = require('../utils/renderdata')(config, broadcastMap);
     debug("Player config is %O", config);
 
     /* GET player. */
@@ -12,6 +12,7 @@ module.exports = function(config) {
         debug("Session data in router is %O", req.session);
         debug("Session id in router is %O", req.session.id);
         var data = renderData(req.session);
+        var playerData 
         debug('player.js data is %O', data);
         res.render('player', data);
     });
