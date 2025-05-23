@@ -4,15 +4,15 @@ var router = express.Router();
 
 
 module.exports = function(config, broadcastMap) {
-    var renderData = require('../utils/renderdata')(config, broadcastMap);
+    var renderData = require('../utils/renderdata')(config);
     debug("Player config is %O", config);
 
     /* GET player. */
     router.get('/', function(req, res, next) {
         debug("Session data in router is %O", req.session);
         debug("Session id in router is %O", req.session.id);
-        var data = renderData(req.session);
-        var playerData 
+        var data = { 'renderData': renderData(req.session).renderData,
+                     'broadcastMap': broadcastMap };
         debug('player.js data is %O', data);
         res.render('player', data);
     });

@@ -87,20 +87,28 @@
         
         //set the title.  Try to do this first to prevent flicker
         const h1Element = document.getElementById("streamtitle");
-        const title = streamData.get(currentPlayerState.currentStream).title;
+        //If this is a broadcast, then show both the broadcast name and the stream name
+        var title;
+        if (currentPlayerState.currentBroadcast) {
+          const broadcastTitle = broadcastData.get(currentPlayerState.currentBroadcast).title;
+          const streamTitle = streamData.get(currentPlayerState.currentStream).title;
+          title = broadcastTitle + " - " + streamTitle;
+        } else {
+          title = streamData.get(currentPlayerState.currentStream).title;
+        }
         h1Element.textContent = title;
         document.title = title;
   
         //load the current stream details into the player
         var sources = streamData.get(currentPlayerState.currentStream).sources;
-        //console.log("sources: " + JSON.stringify(sources));
+        console.log("sources: " + JSON.stringify(sources));
         player.load(sources);
       }
 
       function component() {
         var player = OvenPlayer.create("player", {
-          "autoStart": false,
-          "autoFallback": true,
+          "autoStart": true,
+          "autoFallback": false,
           "mute": false,
           "hlsConfig": {
             "liveSyncDuration": 0.5,

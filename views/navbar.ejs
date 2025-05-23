@@ -29,6 +29,23 @@
         </ul>
       </div>
       <!-- End stream dropdown -->
+      <!--Switcher dropdown -->
+      <% if (renderData.admins.has(userid) && renderData.admins.get(userid).broadcasts.length > 0) { %>
+      <div class="btn-group">
+        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          Switcher
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <% renderData.admins.get(userid).broadcasts.forEach( (broadcast) => {
+            var broadcastKey = broadcast;
+            var broadcastName = renderData.broadcasts.get(broadcast).name;
+            %>
+          <li><a class="dropdown-item" href="/switcher/<%= broadcastName %>"><%= broadcastKey %></a></li>
+          <% }) %>
+        </ul>
+      </div>
+      <%}%>
+      <!-- End switcher dropdown -->
 
       <!--User dropdown -->
       <div class="btn-group">
@@ -41,7 +58,7 @@
           <%= username %>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-          <% if (renderData.admins.has(userid)) { %>
+          <% if (renderData.admins.has(userid) && renderData.admins.get(userid).streams.length > 0) { %>
             <li><a class="dropdown-item" href="/streamkeys">Your stream keys</a></li>
             <li><hr class="dropdown-divider"></li>
           <%}%>

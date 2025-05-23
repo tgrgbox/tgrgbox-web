@@ -19,6 +19,7 @@ var logoutRouter = require('./routes/logout');
 var playerRouter = require('./routes/player')(config, broadcast.getBroadcastMap());
 var streamkeysRouter = require('./routes/streamkeys')(config);
 var omeapi = require('./routes/omeapi')(config);
+var switcher = require('./routes/switcher')(config);
 
 
 var app = express();
@@ -71,6 +72,7 @@ app.use('/logout', logoutRouter);
 app.use('/streamkeys', sessionmgmt.isAuthenticated, streamkeysRouter);
 app.use('/api/ome', omeapi);
 app.use('/api/broadcast', broadcast.router);
+app.use('/switcher', switcher);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

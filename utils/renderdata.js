@@ -8,7 +8,7 @@ inspect.defaultOptions.depth = 10;
 
 
 
-module.exports = function(config, broadcastMap) {
+module.exports = function(config) {
     function makeStreamUrl(url, app, stream, file) {
         //debug('makeStreamUrl(%O, %O, %O, %O)', url, app, stream, file);
         var path = file ? nodePath.join(app, stream, file) : nodePath.join(app, stream);
@@ -75,6 +75,7 @@ module.exports = function(config, broadcastMap) {
                 'name': broadcast.name,
                 'key': broadcast.broadcast,
                 'title': broadcast.title,
+                'streams' : broadcast.streams
             } ];
         }));
 
@@ -104,8 +105,7 @@ module.exports = function(config, broadcastMap) {
             })),
             'broadcasts' : broadcastSources,
             'admins' : config.admins,
-            },
-            'broadcastMap' : broadcastMap
+            }
         };
         debug('player.js renderData is %O', data);  
         //debug('player.js renderData is %O', inspect(data, { depth: 10 }));  

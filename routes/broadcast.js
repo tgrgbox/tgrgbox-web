@@ -21,6 +21,11 @@ module.exports = function(config) {
 
     // Handle POST requests
     router.post('/:broadcast/:stream', (req, res) => {
+        //make sure the context user has access to the broadcast
+        if (!config.admins.get(req.session.userid).broadcasts.includes(req.params.broadcast)) {
+            res.status(403).send("You are not authorized to view this broadcast");
+            return;
+        }
         //TODO: error checking for stream exists
         broadcastMap.set(req.params.broadcast, req.params.stream);
         res.json({ [req.params.broadcast]: broadcastMap.get(req.params.broadcast)});

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= renderData.siteName %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/public/ovenplayer/ovenplayer.js"></script>
+    <script src="/public/hls.js/hls.min.js"></script>
+    <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <style>
+        .wrapper {
+            width: 320px;
+            height: 240px;
+            float: left;
+        }
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .streamcontainer {
+            clear:both;
+        }
+    </style>
+  </head>
+  <body>
+    <script>
+        function switchStream(broadcast, stream) {
+            fetch('/api/broadcast/' + broadcast + '/' + stream, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: null
+            })
+                .then(response => response.json())
+                .then(data => console.log('Success:', data))
+                .catch(error => console.error('Error:', error));
+
+        }
+    </script>
+    <%- include('navbar', renderData); %>
+    <div class="p-3 m-3">
+    <h1><center>Switcher for <%= broadcast.title %></center></h1>
+    </div>
+    <div>
+    <% var streams = broadcast.streams;
+    streams.forEach( (stream) => {
+        %>
+        <div class="streamcontainer">
+            <h2><%-renderData.viewStreams.get(stream).title%></h2>
+            <div class="wrapper">
+                <div id="<%-'player' + stream%>"></div>
+            </div>
+            <div class="wrapper center">
+                <button id="button-<%-stream%>" type="button">Switch to <%-renderData.viewStreams.get(stream).title%></button>
+            </div>
+        </div>
+
+        <script>
+            var button = document.getElementById("button-<%-stream%>");
+            button.addEventListener("click", async _ => {
+                switchStream("<%= broadcast.name %>", "<%= stream %>");
+            });
+            var player = OvenPlayer.create("<%-'player' + stream%>", {
+                "controls": true,
+                "autoplay": false,
+                "width": "320px",
+                "height": "240px",
+                "sources": <%- JSON.stringify(renderData.viewStreams.get(stream).sources) %>
+            });
+        </script>
+        <%
+    });
+    %>
+    <script src="/public/bootstrap/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  </body>
+</html>
+
