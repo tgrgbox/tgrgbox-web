@@ -79,7 +79,7 @@ app.use('/logout', logoutRouter);
 app.use('/streamkeys', sessionmgmt.isAuthenticated, streamkeysRouter);
 app.use('/api/ome', omeapi);
 app.use('/api/broadcast', broadcast.router);
-app.use('/switcher', switcher);
+app.use('/switcher', sessionmgmt.isAuthenticated, switcher);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
