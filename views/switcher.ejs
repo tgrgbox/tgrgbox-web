@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="auto">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -97,9 +97,9 @@
                 strm = "<%-stream%>";
                 elt = document.getElementById("container_player" + strm);
                 if (newStream === strm) {
-                    elt.classList.add("activestream");
+                    elt.classList.add("border", "border-success", "border-3");
                 } else {
-                    elt.classList.remove("activestream");
+                    elt.classList.remove("border", "border-success", "border-3");
                 }
             <%
             });
