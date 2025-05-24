@@ -7,6 +7,7 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script src="/public/ovenplayer/ovenplayer.js"></script>
     <script src="/public/hls.js/hls.min.js"></script>
+    <script src="/js/player.js"></script>
     <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
         .wrapper {
@@ -63,13 +64,10 @@
             button.addEventListener("click", async _ => {
                 switchStream("<%= broadcast.name %>", "<%= stream %>");
             });
-            var player = OvenPlayer.create("<%-'player' + stream%>", {
-                "controls": true,
-                "autoStart": true,
-                "autowFallback": false,
-                "mute": true,
-                "sources": <%- JSON.stringify(renderData.viewStreams.get(stream).thumbnailSources) %>
-            });
+            var player = createOvenPlayer("<%-'player' + stream%>", 
+                            <%- JSON.stringify(renderData.viewStreams.get(stream).thumbnailSources) %>,
+                            true
+            );
         </script>
         <%
     });

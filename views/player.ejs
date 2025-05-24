@@ -7,6 +7,7 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script src="/public/ovenplayer/ovenplayer.js"></script>
     <script src="/public/hls.js/hls.min.js"></script>
+    <script src="/js/player.js"></script>
     <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
       .wrapper{
@@ -106,16 +107,7 @@
       }
 
       function component() {
-        var player = OvenPlayer.create("player", {
-          "autoStart": true,
-          "autoFallback": false,
-          "mute": false,
-          "hlsConfig": {
-            "liveSyncDuration": 0.5,
-            "liveMaxLatencyDuration": 2,
-            "maxLiveSyncPlaybackRate": 1.5
-          }
-        });
+        var player = createOvenPlayer("player", null, false);
         return player;
       }
 
