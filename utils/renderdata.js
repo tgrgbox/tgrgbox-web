@@ -61,11 +61,21 @@ module.exports = function(config) {
             var sources = Array.from(config.urls.values()).map( (url) => ({ 'label': url.name,
                 'type': url.protocol,
                 'file': makeStreamUrl(url.url, stream.app, stream.stream, url.file)}));
+            //For the switcher we want to have a separate list of thumbnail sources.
+            //if there is a webrtc source, only use that for the thumbnail
+            var urlList = Array.from(config.urls.values()).filter( (url) => url.protocol == 'webrtc');
+            if (urlList.length == 0)
+                urlList = Array.from(config.urls.values());
+
+            var thumbnailSources = urlList.map( (url) => ({ 'label': url.name,
+                'type': url.protocol,
+                'file': makeStreamUrl(url.url, stream.app, stream.stream + "-thumbnail", url.file)}));
             return [ stream.stream, {
                 'name': stream.name,
                 'key': stream.stream,
                 'title': stream.title,
                 'sources': sources,
+                'thumbnailSources': thumbnailSources,
                 'streamKey': stream.streamKey
             } ];
         }));

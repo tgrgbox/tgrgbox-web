@@ -65,10 +65,10 @@
             });
             var player = OvenPlayer.create("<%-'player' + stream%>", {
                 "controls": true,
-                "autoplay": false,
-                "width": "320px",
-                "height": "240px",
-                "sources": <%- JSON.stringify(renderData.viewStreams.get(stream).sources) %>
+                "autoStart": true,
+                "autowFallback": false,
+                "mute": true,
+                "sources": <%- JSON.stringify(renderData.viewStreams.get(stream).thumbnailSources) %>
             });
         </script>
         <%

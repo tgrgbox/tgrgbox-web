@@ -16,6 +16,7 @@ module.exports = function(config) {
         if (config.admins.get(userid).broadcasts.includes(broadcast)) {
             var rData = renderData(req.session);
             debug('Got rData %O', rData.renderData.broadcasts);
+            debug('Sources are ' + JSON.stringify(rData.renderData.viewStreams.get('mike').thumbnailSources));
             var data = { 'broadcast': rData.renderData.broadcasts.get(req.params.broadcast),
                          'renderData': rData.renderData
              };
