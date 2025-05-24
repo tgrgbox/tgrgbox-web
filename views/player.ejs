@@ -8,6 +8,8 @@
     <script src="/public/ovenplayer/ovenplayer.js"></script>
     <script src="/public/hls.js/hls.min.js"></script>
     <script src="/js/player.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/broadcastMapUpdates.js"></script>
     <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
       .wrapper{
@@ -136,7 +138,7 @@
         });
       }
 
-      setInterval(pollBroadcastMap, 5000);
+      //setInterval(pollBroadcastMap, 5000);
 
       window.onload = function() {
         console.log("window.onload");
@@ -149,6 +151,13 @@
         updatePlayer(player);
         console.log("loaded player");
         console.log(currentPlayerState)
+
+        registerForBroadcastMapUpdates((newBroadcastMap) => {
+          console.log("in registerForBroadcastMapUpdates callback");
+            newBroadcastMap = new Map(Object.entries(newBroadcastMap));
+            doConditionalUpdatePlayer(window.location.href, newBroadcastMap);
+        });
+
       }
 
       function doConditionalUpdatePlayer(url, newBroadcastMap) {
