@@ -40,7 +40,8 @@ module.exports = function(config, io) {
     io.on('connection', (socket) => {
         //whenever a client connects, immediately send them the current broadcast map.
         debug('Socket connected for broadcast updates');
-        socket.send('broadcastMap', Object.fromEntries(broadcastMap.entries()));
+        debug('Sending current broadcast map to client: %O', broadcastMap);
+        socket.emit('broadcastMap', Object.fromEntries(broadcastMap.entries()));
     });
 
 

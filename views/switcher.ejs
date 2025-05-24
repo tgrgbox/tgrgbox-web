@@ -8,6 +8,8 @@
     <script src="/public/ovenplayer/ovenplayer.js"></script>
     <script src="/public/hls.js/hls.min.js"></script>
     <script src="/js/player.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/broadcastMapUpdates.js"></script>
     <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
         .wrapper {
@@ -22,6 +24,9 @@
         }
         .streamcontainer {
             clear:both;
+        }
+        .activestream {
+            border: 1px solid black;
         }
     </style>
   </head>
@@ -49,7 +54,7 @@
     <% var streams = broadcast.streams;
     streams.forEach( (stream) => {
         %>
-        <div class="streamcontainer">
+        <div id="container_<%-'player' + stream%>" class="streamcontainer">
             <h2><%-renderData.viewStreams.get(stream).title%></h2>
             <div class="wrapper">
                 <div id="<%-'player' + stream%>"></div>
@@ -57,6 +62,8 @@
             <div class="wrapper center">
                 <button id="button-<%-stream%>" type="button">Switch to <%-renderData.viewStreams.get(stream).title%></button>
             </div>
+            <!-- this is a "clearfix" to handle the floated elements not being enclosed-->
+            <div style="clear: both;"></div>
         </div>
 
         <script>
@@ -69,9 +76,37 @@
                             true
             );
         </script>
-        <%
+    <%
     });
     %>
+    <script>
+        registerForBroadcastMapUpdates(function(newBroadcastMap) {
+            console.log("in registerForBroadcastMapUpdates callback");
+            console.log(newBroadcastMap);
+            newBroadcastMap = new Map(Object.entries(newBroadcastMap));
+            //mark which stream is currently active
+            var broadcast = "<%-broadcast.key%>";
+            var newStream = newBroadcastMap.get(broadcast);
+            console.log('switching broadcast ' + broadcast + ' to stream ' + newStream);
+
+            var elt;
+            var strm;
+            <% var streams = broadcast.streams;
+                streams.forEach( (stream) => {
+            %>
+                strm = "<%-stream%>";
+                elt = document.getElementById("container_player" + strm);
+                if (newStream === strm) {
+                    elt.classList.add("activestream");
+                } else {
+                    elt.classList.remove("activestream");
+                }
+            <%
+            });
+            %>
+
+        });
+    </script>
     <script src="/public/bootstrap/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   </body>
 </html>
