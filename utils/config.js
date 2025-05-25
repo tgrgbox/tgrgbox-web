@@ -68,35 +68,72 @@ module.exports = function(config, datapath) {
     //this remains an object
     module.ingest = config.get('ingest');
 
-    var channelsObject = config.get('channels');
-    //Load the channels into a list from channel name to its details.  Preserve
+    var streamsObject = config.get('streams');
+    //Load the streams into a list from stream name to its details.  Preserve
     //the list order from the config so we know which one is "primary"
-    var channelsList = Object.entries(channelsObject).map( ([key, value]) => ({ 'name': key, 'title': value.title, 'app': value.app, 'stream': value.stream, 'streamKey': getOrCreateSecret(currentData, 'stream.' + key, LONG_SECRET_SIZE) }));
+    var streamsList = Object.entries(streamsObject).map( ([key, value]) => ({ 'name': key, 'title': value.title, 'app': value.app, 'stream': key, 'streamKey': getOrCreateSecret(currentData, 'stream.' + key, LONG_SECRET_SIZE) }));
+    debug('streamList is %O', streamsList);
+
+    //Load the broadcasts
+    var broadcastsObject = config.get('broadcasts');
+    //Load the broadcasts into a list from broadcast name to its details.  Preserve the order so we know which is "primary".
+    var broadcastsList = Object.entries(broadcastsObject).map( ([key, value]) => ({ 'name': key, 'title': value.title, 'broadcast': key, 'streams': value.streams }));
+    //make sure every stream associated with a broadcast exists
+    broadcastsList.forEach((broadcast) => {
+        var streamNamesList = streamsList.map((entry) => entry.name)
+        broadcast.streams.forEach((stream) => {
+            debug('stream is %O', stream);
+            debug('streamNamesList is %O', streamNamesList);
+            if (!streamNamesList.includes(stream)) {
+                throw 'Stream ' + stream + ' for broadcast ' + broadcast.name + ' is not in the streams list';
+            }
+        });
+    });
+
+    module.broadcasts = broadcastsList;
 
     //make sure that the stream keys are unique
     var streamKeys = new Set();
-    channelsList.forEach((channel) => {
-        if (streamKeys.has(channel.streamKey)) {
-            throw "Stream key " + channel.streamKey + " is not unique";
+    broadcastsList.forEach((broadcast) => {
+        if (streamKeys.has(broadcast.broadcast)) {
+            throw "Broadcast identifier " + broadcast.broadcast + " is not unique";
         }
-        streamKeys.add(channel.streamKey);
+        streamKeys.add(broadcast.key);
     });
-    //debug("channels map:\n%O", channelsList);
-    module.channels = channelsList;
-    //and a second from streamer to their list of allowed channels
-    var streamerMap = new Map();
-    Object.entries(channelsObject).forEach(([key, value]) => {
+    streamsList.forEach((stream) => {
+        if (streamKeys.has(stream.stream)) {
+            throw "Stream identifier " + stream.stream + " is not unique";
+        }
+        streamKeys.add(stream.streamKey);
+    });
+    //debug("streams map:\n%O", streamsList);
+    module.streams = streamsList;
+    //and a second from users to their list of allowed streams
+    var adminMap = new Map();
+    Object.entries(streamsObject).forEach(([key, value]) => {
         value.users.forEach((username) => {
             if (!module.users.has(username)) {
                 throw username + ' is in the streamer list but not in the users list';
             }
-            if (!streamerMap.has(username)) {
-                streamerMap.set(username, []);
+            if (!adminMap.has(username)) {
+                adminMap.set(username, {'streams': [], 'broadcasts': []});
             }
-            streamerMap.get(username).push(key);
+            adminMap.get(username).streams.push(key);
         });
     });
-    module.streamers = streamerMap;
+    //And finally to their allowed broadcasts
+    Object.entries(broadcastsObject).forEach(([key, value]) => {
+        value.users.forEach((username) => {
+            if (!module.users.has(username)) {
+                throw username + ' is in the broadcaster list but not in the users list';
+            }
+            if (!adminMap.has(username)) {
+                adminMap.set(username, {'streams': [], 'broadcasts': []});
+            }
+            adminMap.get(username).broadcasts.push(key);
+        });
+    });
+    module.admins = adminMap
     //debug("streamer map:\n%O", streamerMap);
 
     debug("final config object:\n%O", module);

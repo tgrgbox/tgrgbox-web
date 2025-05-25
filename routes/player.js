@@ -3,7 +3,7 @@ var express = require('express');
 var router = express.Router();
 
 
-module.exports = function(config) {
+module.exports = function(config, broadcastMap) {
     var renderData = require('../utils/renderdata')(config);
     debug("Player config is %O", config);
 
@@ -11,10 +11,12 @@ module.exports = function(config) {
     router.get('/', function(req, res, next) {
         debug("Session data in router is %O", req.session);
         debug("Session id in router is %O", req.session.id);
-        var data = renderData(req.session);
+        var data = { 'renderData': renderData(req.session).renderData,
+                     'broadcastMap': broadcastMap };
         debug('player.js data is %O', data);
         res.render('player', data);
     });
+    /*
     router.get('/:stream', function(req, res, next) {
         debug("Got stream name %O", req.params);
         var data = renderData(req.session, req.params.stream);
@@ -25,5 +27,6 @@ module.exports = function(config) {
         debug('player.js data is %O', data);
         res.render('player', data);
     });
+    */
     return router;
 }

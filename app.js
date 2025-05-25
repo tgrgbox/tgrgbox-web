@@ -6,20 +6,28 @@ var logger = require('morgan');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 var debug = require('debug')('tgrgbox:app');
+const { Server } = require('socket.io');
+const { createServer } = require('http');
+
+var app = express();
+const server = createServer(app);
+const io = new Server(server);
 
 //load the config file(s)
 var serverConfig = require('config');
 
 var config = require('./utils/config')(serverConfig, path.join(__dirname, "data"));
 
+var broadcast = require('./routes/broadcast')(config, io);
 var sessionmgmt = require('./utils/sessionmgmt');
 var indexRouter = require('./routes/index');
 var logoutRouter = require('./routes/logout');
-var playerRouter = require('./routes/player')(config);
+var playerRouter = require('./routes/player')(config, broadcast.getBroadcastMap());
 var streamkeysRouter = require('./routes/streamkeys')(config);
 var omeapi = require('./routes/omeapi')(config);
+var switcher = require('./routes/switcher')(config);
 
-var app = express();
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -36,6 +44,8 @@ app.use('/public/ovenplayer', express.static(path.join(__dirname, 'node_modules'
 app.use('/public/hls.js', express.static(path.join(__dirname, 'node_modules', 'hls.js', 'dist')));
 //and bootstrap
 app.use('/public/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
+//and the websocket library (socket.io)
+app.use('/public/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
 
 var fileStoreConfig = {
     'ttl' : 60 * 60 * 24, //sessions live for 24 hours
@@ -68,6 +78,8 @@ app.use('/login', loginRouter);
 app.use('/logout', logoutRouter);
 app.use('/streamkeys', sessionmgmt.isAuthenticated, streamkeysRouter);
 app.use('/api/ome', omeapi);
+app.use('/api/broadcast', broadcast.router);
+app.use('/switcher', sessionmgmt.isAuthenticated, switcher);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -88,6 +100,6 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
-app.listen(config.port, '0.0.0.0', () => {
+server.listen(config.port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${config.port}`);
 });

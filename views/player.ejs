@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= renderData.source.title %></title>
+    <title>title</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script src="/public/ovenplayer/ovenplayer.js"></script>
     <script src="/public/hls.js/hls.min.js"></script>
+    <script src="/js/player.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/broadcastMapUpdates.js"></script>
     <link href="/public/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
       .wrapper{
@@ -18,26 +21,175 @@
   <body>
 
     <%- include('navbar', renderData); %>
-    <h1><center><%= renderData.source.title %></center></h1>
+    <h1 id="streamtitle" style="text-align: center"></h1>
 
     <div class="wrapper">
       <div id="player"></div>
     </div>
     <script>
+      var streamData = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(renderData.viewStreams.entries())) %>));
+      var broadcastData = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(renderData.broadcasts.entries())) %>));
+      var broadcastMap = new Map(Object.entries(<%- JSON.stringify(Object.fromEntries(broadcastMap.entries())) %>));
+      var player = null;
+
+      var currentPlayerState = {};
+
+      /**
+       * This function is called when the url changes.  It creates a new player state based on the url and the
+       * supplied broadcast map.  Callers should compare the new state to the existing state and then update the page/player accordingly
+       */
+      function getNewPlayerState(url, newBroadcastMap) {
+        const anchorIndex = url.lastIndexOf("#");
+        var anchor = null;
+        if (anchorIndex !== -1) {
+          anchor = url.substring(anchorIndex + 1);
+        }
+
+        var newBroadcast = null;
+        var newStream = null;;
+        if (anchor) {
+          console.log("Have anchor");
+          console.log(streamData);
+          if (broadcastData.has(anchor)) {
+            console.log("anchor matches broadcast");
+            newBroadcast = anchor;
+          }  else {
+            console.log("anchor matches stream");
+            newStream = anchor;
+          }
+        } else {
+          //There was no anchor tag in the url, so we want to render the default broadcast/stream
+          //first, check to see if there is a default broadcast.  If there is one, then use that
+          //otherwise use the first stream
+          if (streamData.broadcasts) {
+            newBroadcast = broadcastData.values().next().key;
+          } else {
+            //console.log(streamData.values().next().value.key);
+            newStream = streamData.values().next().value.key;
+          }
+        }
+
+        if (newBroadcast) {
+          //if we have a broadcast then lookup the associated stream.  This callback may return a new map if the broadcast has changed
+          newStream = newBroadcastMap.get(newBroadcast);
+        }
+        console.log("newBroadcast: " + newBroadcast);
+        console.log("newStream: " + newStream);
+
+        return {
+          'currentBroadcast' : newBroadcast,
+          'currentStream' : newStream,
+          'broadcastMap': newBroadcastMap
+        };
+      }
+
+      function updatePlayer(player) {
+
+        console.log("updatePlayer: " + currentPlayerState.currentStream);
+        console.log(currentPlayerState);
+        
+        //set the title.  Try to do this first to prevent flicker
+        const h1Element = document.getElementById("streamtitle");
+        //If this is a broadcast, then show both the broadcast name and the stream name
+        var title;
+        if (currentPlayerState.currentBroadcast) {
+          const broadcastTitle = broadcastData.get(currentPlayerState.currentBroadcast).title;
+          const streamTitle = streamData.get(currentPlayerState.currentStream).title;
+          title = broadcastTitle + " - " + streamTitle;
+        } else {
+          title = streamData.get(currentPlayerState.currentStream).title;
+        }
+        h1Element.textContent = title;
+        document.title = title;
+  
+        //load the current stream details into the player
+        var sources = streamData.get(currentPlayerState.currentStream).sources;
+        console.log("sources: " + JSON.stringify(sources));
+        player.load(sources);
+      }
+
       function component() {
-        var player = OvenPlayer.create("player", {
-          "autoStart": false,
-          "autoFallback": true,
-          "mute": false,
-          "hlsConfig": {
-            "liveSyncDuration": 0.5,
-            "liveMaxLatencyDuration": 2,
-            "maxLiveSyncPlaybackRate": 1.5
-          },
-          "sources": <%- JSON.stringify(renderData.source.sources) %>
+        var player = createOvenPlayer("player", null, false);
+        return player;
+      }
+
+      async function getUpdatedBroadcastMap() {
+        console.log("in getUpdatedBroadcastMap");
+        return fetch('/api/broadcast')
+          .then(response => response.json())
+          /*.then(data => {
+            console.log("in getUpdatedBroadcastMap callback");
+            console.log(data);
+            newBroadcastMap = new Map(Object.entries(data));
+          })*/
+          .catch(error => {
+            console.error('Error fetching broadcast map:', error);
+          });
+      }
+
+      function pollBroadcastMap() {
+        console.log("in pollBroadcastMap");
+        getUpdatedBroadcastMap().then((newBroadcastMapObject) => {
+          console.log("in pollBroadcastMap callback");
+          console.log(newBroadcastMapObject);
+          newBroadcastMap = new Map(Object.entries(newBroadcastMapObject));
+
+          doConditionalUpdatePlayer(window.location.href, newBroadcastMap);
         });
       }
-      component();
+
+      //setInterval(pollBroadcastMap, 5000);
+
+      window.onload = function() {
+        console.log("window.onload");
+        //console.log(document.getElementById("player"));
+        //console.log(document.readyState);
+        player = component();
+        //console.log("created player");
+        //load the current stream details into the player
+        currentPlayerState = getNewPlayerState(window.location.href, broadcastMap);
+        updatePlayer(player);
+        console.log("loaded player");
+        console.log(currentPlayerState)
+
+        registerForBroadcastMapUpdates((newBroadcastMap) => {
+          console.log("in registerForBroadcastMapUpdates callback");
+            newBroadcastMap = new Map(Object.entries(newBroadcastMap));
+            doConditionalUpdatePlayer(window.location.href, newBroadcastMap);
+        });
+
+      }
+
+      function doConditionalUpdatePlayer(url, newBroadcastMap) {
+          console.log("in doConditionalUpdatePlayer");
+          var newPlayerState = getNewPlayerState(url, newBroadcastMap);
+          console.log("checking state");
+          console.log(newPlayerState)
+          console.log(currentPlayerState);
+          if (currentPlayerState.currentBroadcast !== newPlayerState.currentBroadcast ||
+              currentPlayerState.currentStream !== newPlayerState.currentStream) {
+                console.log("updating player");
+              currentPlayerState = newPlayerState;
+              updatePlayer(player);
+          }
+
+      }
+
+      window.navigation.addEventListener('navigate', function(event) {
+        console.log("in addEventListener");
+        console.log(currentPlayerState);
+        //it might be nice to do this only if the broadcast has changed but it's not a big deal in this case.
+        getUpdatedBroadcastMap().then((newBroadcastMapObject) => {
+            newBroadcastMap = new Map(Object.entries(newBroadcastMapObject));
+            doConditionalUpdatePlayer(event.destination.url, newBroadcastMap);
+
+          }
+        );
+      });
+
+      
+
+
     </script>
     <script src="/public/bootstrap/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   </body>
