@@ -61,15 +61,19 @@
           //There was no anchor tag in the url, so we want to render the default broadcast/stream
           //first, check to see if there is a default broadcast.  If there is one, then use that
           //otherwise use the first stream
-          if (streamData.broadcasts) {
-            newBroadcast = broadcastData.values().next().key;
+          console.log(streamData);
+          if (broadcastData) {
+            console.log('site has broadcasts');
+            newBroadcast = broadcastData.values().next().value.key;
           } else {
+            console.log('site only has streams');
             //console.log(streamData.values().next().value.key);
             newStream = streamData.values().next().value.key;
           }
         }
 
         if (newBroadcast) {
+          console.log('Looking up broadcast: ' + newBroadcast);
           //if we have a broadcast then lookup the associated stream.  This callback may return a new map if the broadcast has changed
           newStream = newBroadcastMap.get(newBroadcast);
         }
@@ -95,7 +99,7 @@
         if (currentPlayerState.currentBroadcast) {
           const broadcastTitle = broadcastData.get(currentPlayerState.currentBroadcast).title;
           const streamTitle = streamData.get(currentPlayerState.currentStream).title;
-          title = broadcastTitle + " - " + streamTitle;
+          title = broadcastTitle + " (watching " + streamTitle + ")";
         } else {
           title = streamData.get(currentPlayerState.currentStream).title;
         }

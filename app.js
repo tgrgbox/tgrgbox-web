@@ -101,5 +101,5 @@ app.use(function(err, req, res, next) {
 module.exports = app;
 
 server.listen(config.port, '0.0.0.0', () => {
-    console.log(`Example app listening on port ${config.port}`);
+    console.log(`tgrgbox-web app listening on port ${config.port}`);
 });
