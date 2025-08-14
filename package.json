@@ -20,7 +20,7 @@
     "debug": "^4.4.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "express-session": "^1.18.1",
+    "express-session": "^1.18.2",
     "hls.js": "^1.6.10",
     "http-errors": "^2.0.0",
     "js-yaml": "^4.1.0",
