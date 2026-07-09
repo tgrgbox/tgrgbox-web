@@ -18,7 +18,7 @@
     "config": "^4.1.1",
     "cookie-parser": "^1.4.7",
     "debug": "^4.4.3",
-    "ejs": "^3.1.10",
+    "ejs": "^4.0.1",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "hls.js": "^1.6.15",
